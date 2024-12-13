@@ -225,3 +225,49 @@ impl CanFdFrame {
         self
     }
 }
+
+
+impl embedded_can::Frame for CanFrame {
+    fn new(id: impl Into<Id>, data: &[u8]) -> Option<Self> {
+        Some(Self::Can2(Can2Frame::new_data(id, data)?.into()))
+    }
+
+    fn new_remote(id: impl Into<Id>, dlc: usize) -> Option<Self> {
+        Some(Self::Can2(Can2Frame::new_remote(id, dlc)?.into()))
+    }
+
+    fn is_extended(&self) -> bool {
+        match self.id() {
+            Id::Standard(_) => false,
+            Id::Extended(_) => true,
+        }
+    }
+
+    fn is_remote_frame(&self) -> bool {
+        match self {
+            CanFrame::Can2(can2_frame) => can2_frame.is_remote(),
+            CanFrame::CanFd(_) => false,
+        }
+    }
+
+    fn id(&self) -> Id {
+        match self {
+            CanFrame::Can2(can2_frame) => can2_frame.id(),
+            CanFrame::CanFd(can_fd_frame) => can_fd_frame.id(),
+        }
+    }
+
+    fn dlc(&self) -> usize {
+        match self {
+            CanFrame::Can2(can2_frame) => can2_frame.dlc(),
+            CanFrame::CanFd(can_fd_frame) => can_fd_frame.dlc().get_num_bytes(),
+        }
+    }
+
+    fn data(&self) -> &[u8] {
+        match self {
+            CanFrame::Can2(can2_frame) => can2_frame.data().unwrap_or(&[]),
+            CanFrame::CanFd(can_fd_frame) => can_fd_frame.data(),
+        }
+    }
+}
