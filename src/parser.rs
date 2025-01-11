@@ -87,11 +87,6 @@ impl MessageKind {
 }
 
 pub fn parse_frame_from_bytes(buffer: &[u8]) -> Result<CanFrame, MessageParseError> {
-    assert!(
-        buffer.len() > 1,
-        "Tried to parse message from empty buffer!"
-    );
-
     let kind: MessageKind = buffer[0].try_into()?;
     let message_data = &buffer[1..];
 
